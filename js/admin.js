@@ -10,6 +10,7 @@ import { Producto } from "./productoClass.js";
 
 // declarar variables
 let listaProductos = [];
+let productoExistente = false; // false tengo que agregar un producto nuevo, true tengo que modificar
 // este archivo tendra toda la logica del ABM o CRUD
 let producto = document.querySelector("#producto");
 let cantidad = document.querySelector("#cantidad");
@@ -17,6 +18,7 @@ let codigo = document.querySelector("#codigo");
 let descripcion = document.querySelector("#descripcion");
 let url = document.querySelector("#url");
 let formulario = document.querySelector("#formProducto");
+let btnAgregar = document.querySelector("#btnAgregar")
 //  console.log(formulario);
 
 producto.addEventListener("blur", () => {
@@ -36,6 +38,8 @@ url.addEventListener("blur", () => {
 });
 formulario.addEventListener("submit", guardarProducto);
 
+btnAgregar.addEventListener("click", limpiarFormulario);
+
 //verificar si
 cargaInicial();
 
@@ -43,11 +47,19 @@ function guardarProducto(e) {
   e.preventDefault();
   // validar los datos del formulario
   if (validarGeneral()) {
-    // crear un nuevo producto
-    console.log("aqui deberia crear un producto");
-    agregarProducto();
+    // tengo que modificar o tengo que agregar uno nuevo
+    if (productoExistente == true) {
+      //modificar
+      modificarProducto();
+    } else {
+      //agregar
+
+      // crear un nuevo producto
+      // console.log("aqui deberia crear un producto");
+      agregarProducto();
+    }
   } else {
-    console.log("aqui solo mostrar el cartel de error");
+    // console.log("aqui solo mostrar el cartel de error");
   }
 }
 
@@ -62,7 +74,7 @@ function agregarProducto() {
   // console.log(productoNuevo);
   // guardar el producto en el arreglo
   listaProductos.push(productoNuevo);
-  console.log(listaProductos);
+  // console.log(listaProductos);
   // guardar en localstorage
   localStorage.setItem("listaProductosKey", JSON.stringify(listaProductos));
   // limpiar el formulario
@@ -74,7 +86,7 @@ function agregarProducto() {
 function cargaInicial() {
   // si hay algo en el LocalStorage lo guardo en el arreglo, si no se deja el arreglo vacio
   listaProductos = JSON.parse(localStorage.getItem("listaProductosKey")) || [];
-  console.log(listaProductos);
+  // console.log(listaProductos);
 
   // llamar a la funcion que crea filas
   listaProductos.forEach((itemProducto) => {
@@ -106,6 +118,7 @@ function limpiarFormulario() {
   // limpiar las clases de cada elemento del form
   codigo.className = "form-control";
   // terminar de limpiar los is-valid
+  productoExistente = false;
 }
 
 // llamar a una funcion de un archivo js tipo modulo a un archivo html
@@ -117,9 +130,48 @@ window.prepararEdicionProducto = (codigo) => {
   });
   // console.log(productoEncontrado);
   //mostrar los datos del objeto en formulario
- document.querySelector("#producto").value = productoEncontrado.nombreProducto;
- document.querySelector("#codigo").value = productoEncontrado.codigo;
- document.querySelector("#cantidad").value = productoEncontrado.cantidad;
- document.querySelector("#descripcion").value = productoEncontrado.descripcion;
- document.querySelector("#url").value = productoEncontrado.url;
+  document.querySelector("#producto").value = productoEncontrado.nombreProducto;
+  document.querySelector("#codigo").value = productoEncontrado.codigo;
+  document.querySelector("#cantidad").value = productoEncontrado.cantidad;
+  document.querySelector("#descripcion").value = productoEncontrado.descripcion;
+  document.querySelector("#url").value = productoEncontrado.url;
+
+  //cambiar el valor de la variable bandera para editar
+  productoExistente = true;
 };
+
+function modificarProducto() {
+  console.log("Desde modificar producto");
+  console.log(codigo.value);
+  //buscar la posicion del objeto con el codigo indicado
+  let indiceProducto = listaProductos.findIndex((itemProducto) => {
+    return itemProducto.codigo == codigo.value;
+  });
+
+  // console.log(indiceProducto);
+  // console.log(listaProductos[indiceProducto].nombreProducto);
+
+  //actualizar los valores(propiedades) del objeto dentro de mi arreglo
+  listaProductos[indiceProducto].nombreProducto =
+    document.querySelector("#producto").value;
+  listaProductos[indiceProducto].descripcion =
+    document.querySelector("#descripcion").value;
+  listaProductos[indiceProducto].cantidad =
+    document.querySelector("#cantidad").value;
+  listaProductos[indiceProducto].url = document.querySelector("#url").value;
+
+  console.log(listaProductos[indiceProducto]);
+  //actualizar local storage
+  localStorage.setItem("listaProductosKey", JSON.stringify(listaProductos));
+  //actualizar la tabla
+  borrarFilas();
+  listaProductos.forEach((itemProducto) => {
+    crearFila(itemProducto);
+  });
+}
+
+function borrarFilas() {
+  // traigo el nodo padre que seria el tbody
+  let tabla = document.querySelector("#tablaProductos");
+  tabla.innerHTML = "";
+}
